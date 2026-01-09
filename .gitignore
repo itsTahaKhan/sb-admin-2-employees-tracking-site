@@ -1,1 +1,10 @@
+<<<<<<< HEAD
 node_modules
+=======
+/vendor/
+/node_modules/
+/uploads/
+/logs/
+/.env
+*.log
+>>>>>>> 53599b911bc74ff6871d8f99c4a2e99de69299e9
