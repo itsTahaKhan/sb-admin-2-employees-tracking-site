@@ -50,7 +50,10 @@
                             <!-- Dropdown - Alerts -->
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="alertsDropdown" id="notifList">
-                                <h6 class="dropdown-header">Notifications<span id="notifCount2">(0)</span></h6>
+                                <h6 class="dropdown-header">Notifications
+                                    <span id="notifCount2">(0)</span>
+                                    <button id="markAllRead" class="btn btn-sm btn-primary ml-5" style=""><b>Mark all as read</b></button>
+                                </h6>
                                 <div id="notifScrollArea">
                                     <span class="dropdown-item text-muted">No notifications</span>
                                 </div>

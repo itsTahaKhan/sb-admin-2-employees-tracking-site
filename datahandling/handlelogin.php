@@ -37,6 +37,9 @@ if($action === 'login'){
                 ");
                 $stmt->bind_param("i", $_SESSION['id']);
                 $stmt->execute();
+                if(empty($_SESSION['csrf_token'])){
+                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                }
                 loginCheckAdmin('Logging in as Admin');
                 }
             else{

@@ -15,10 +15,9 @@
 <!-- Employees Table -->  
 <div class="content">
   <div class="m-3">
-    <div>
-      <button class="btn btn-success btn-sm mb-2" style="float:left;" data-toggle="modal" data-target="#fileUploadModal">Add (.csv) file to add multiple employees.</button>
-      <!-- <button id="downloadBtn" class="btn btn-sm btn-success" style="margin-left:1vw;">Download Employees list</button> -->
-      <button class="btn btn-sm btn-success mb-2" style="float:right;" data-toggle="modal" data-target="#modalAddEmployee">Add Employee</button>
+    <div class="row">
+      <button id="fileUploadBtn" class="btn btn-success btn-sm" style="margin-bottom:5px;" data-toggle="modal" data-target="#fileUploadModal">Add (.csv) file to add multiple employees.</button>
+      <button id="addEmpBtn" class="btn btn-sm btn-success mb-2" style="margin-left:1vw;" data-toggle="modal" data-target="#modalAddEmployee">Add Employee</button>
     </div>
     <table id="empTable" class="table table-dark table-bordered table-striped">
       <thead>
@@ -70,15 +69,20 @@
           </div>
           <div class="form-group col-md-6">
             <label>Designation:<span style="color:red;">*</span></label>
-            <select  multiple="multiple" style="width:220px; height:20px;" size="1" name="designation[]" id="addUserDesignation" class="form-control"></select>
+            <select  multiple="multiple" style="width:220px; height:25px;" name="designation[]" id="addUserDesignation" class="form-control"></select>
             <small class="text-danger error-text" data-error-for="designation"></small>
           </div>
       </div>
       <div class="form-row">
-        <div class="form-group col-md-12">
-          <label>Password: <span style="color:red;">(Only for Admin)</span></label>
+        <div class="form-group col-md-6">
+          <label>Password: <span style="color:red;">*</span></label>
           <input class="form-control" type="password" name="pass" id="emp-pass">
           <small class="text-danger error-text" data-error-for="pass"></small>
+        </div>
+        <div class="form-group col-md-6">
+          <label>Role: <span style="color:red;">*</span></label>
+          <select style="width:220px; height:20px;" name="role" id="addUserRole" class="form-control"></select>
+          <small class="text-danger error-text" data-error-for="role"></small>
         </div>
       </div>
       </div>
@@ -113,14 +117,21 @@
         </div>
         <div class="form-row">
           <div class="form-group col-md-6">
-            <label>Email:<span style="color:red;">*</span></label>
-            <input id="emp_email" name="email" class="form-control" type="email" >
-            <small class="text-danger error-text" data-error-for="email"></small>
+            <label>Role: <span style="color:red;">*</span></label>
+            <select style="width:220px; height:20px;" name="role" id="updateUserRole" class="form-control"></select>
+            <small class="text-danger error-text" data-error-for="role"></small>
           </div>
           <div class="form-group col-md-6">
             <label>Designation:<span style="color:red;">*</span></label>
-            <select multiple="multiple" style="width:220px; height:20px;" size="1" id="emp_design_select" name="designation[]" class="form-control" ></select>
+            <select multiple="multiple" style="width:220px; height:20px;" id="emp_design_select" name="designation[]" class="form-control" ></select>
             <small class="text-danger error-text" data-error-for="designation"></small>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Email:<span style="color:red;">*</span></label>
+            <input id="emp_email" name="email" class="form-control" type="email" >
+            <small class="text-danger error-text" data-error-for="email"></small>
           </div>
         </div>
       </div>
@@ -145,5 +156,7 @@
     </form>
   </div>
 </div>
+
+<script src="js\employees.js"></script>
 
 <?php include './layouts/footer.php' ?>

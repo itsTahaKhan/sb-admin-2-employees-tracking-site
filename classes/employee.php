@@ -6,6 +6,7 @@ class Employee{
     public $email = '';
     public $designation = [];
     public $pass = '';
+    public $role = '';
     public $orig = null;
     public $errors = [];
     public $conn;
@@ -48,6 +49,17 @@ class Employee{
     }
     public function getOrig(): string{
         return $this->orig;
+    }
+
+    public function setRole($role){
+        if(!$role){
+            $this->errors['role'] = ['Assign a role'];
+        }
+        $this->role = $role;
+    }
+
+    public function getRole(): string{
+        return $this->role;
     }
 
     public function setEmail($email){
@@ -122,8 +134,12 @@ class Employee{
             $hashpass = password_hash($this->pass, PASSWORD_DEFAULT);
             $date = date('Y-m-d H:i:s');
             // Validation Done now adding
-            $stmt1 = $this->conn->prepare("INSERT INTO employees (emp_id, fname, lname, email, pass, created_at) VALUES (?,?,?,?,?,?)");
-            $stmt1->bind_param('isssss', $this->emp_id, $this->fname, $this->lname, $this->email, $hashpass, $date);
+            $stmt1 = $this->conn->prepare("
+            INSERT INTO
+              employees (emp_id, fname, lname, email, pass, created_at, role)
+              VALUES (?,?,?,?,?,?,?)            
+            ");
+            $stmt1->bind_param('isssssi', $this->emp_id, $this->fname, $this->lname, $this->email, $hashpass, $date, $this->role);
             if(!$stmt1->execute()){
                 throw new Exception("Adding employee failed");
             }
@@ -160,7 +176,7 @@ class Employee{
         }
         catch(Exception $e){
             $this->conn->rollback();
-            jerror("Employee not added. ");
+            jerror("Employee not added. " . $e);
         }
     }
 
@@ -214,8 +230,10 @@ class Employee{
                 throw new Exception("Designations not deleted");
             }
 
-            $stmt = $this->conn->prepare("UPDATE employees SET emp_id = ?, fname = ?, lname = ?, email = ? WHERE emp_id = ?");
-            $stmt->bind_param('isssi', $this->emp_id, $this->fname, $this->lname, $this->email, $this->orig);    
+            $stmt = $this->conn->prepare("
+                UPDATE employees SET emp_id = ?, fname = ?, lname = ?, email = ?, role = ? WHERE emp_id = ?
+            ");
+            $stmt->bind_param('isssii', $this->emp_id, $this->fname, $this->lname, $this->email, $this->role, $this->orig);    
             if(!$stmt->execute()){
                 throw new Exception("Employee table not updated");
             }

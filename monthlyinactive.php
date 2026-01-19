@@ -32,6 +32,7 @@
   var myTable = $('#empTable2').DataTable({
     processing: true,
     serverSide: true,
+    responsive: true,
     dom: 'Bfrtip',
     ajax: {
       url: "handleform.php",

@@ -1,5 +1,6 @@
 jQuery(document).ready(function($){
   loadDesignationOptions();
+  loadUserRoles();
   loadDesignations();
   loadTotalUsers();
   setUsername();
@@ -8,9 +9,16 @@ jQuery(document).ready(function($){
   loadNotifications();
 });
 
+  $.ajaxSetup({
+    data: {
+      csrf_token: CSRF_TOKEN
+    }
+  });
+
   var myTable = $('#empTable').DataTable({
     processing: true,
     serverSide: true,
+    responsive: true,
     dom: 'Bfrtip',
     buttons: [{
       extend: "excelHtml5",
@@ -83,6 +91,34 @@ jQuery(document).ready(function($){
     html=>$('#addUserDesignation,#emp_design_select').html(html)); 
   }
 
+  //-------------Load Roles Options ------------------
+function loadUserRoles() {
+  $.post('handleform.php', { action: 'fetchRolesOptions' }, function (html) {
+
+    $('#addUserRole')
+      .html(html)
+      .select2({
+        placeholder: "Select role",
+        width: "100%",
+        allowClear: true,
+        dropdownParent: $('#modalAddEmployee'),
+        minimumResultsForSearch: Infinity
+      });
+
+    $('#updateUserRole')
+      .html(html)
+      .select2({
+        placeholder: "Select role",
+        width: "100%",
+        allowClear: true,
+        dropdownParent: $('#empUpdateModal'),
+        minimumResultsForSearch: Infinity
+      });
+  });
+}
+
+
+
   //--------Set Username-------------
   function setUsername(){
     $.post('handleform.php', {action:'getUserName'}, resp=>{
@@ -111,7 +147,7 @@ $('#formAddUser').submit(function (e) {
     $.ajax({
         url: 'handleform.php',
         type: 'POST',
-        data: $(this).serialize() + '&action=addEmployee',
+        data: $(this).serialize() + '&action=addEmployee&csrf_token='+CSRF_TOKEN,
         dataType: 'json',
         success: (resp) => {
 
@@ -126,6 +162,7 @@ $('#formAddUser').submit(function (e) {
               alert(resp.msg);
               this.reset();
               $('#addUserDesignation').val([]).trigger('change');
+              $('#addUserRole').val([]).trigger('change');
               myTable.ajax.reload(null, false);
             }
         }
@@ -162,6 +199,9 @@ function showFormErrors(formId, errors) {
 
         //For select2 dropdown
         if (field === 'designation') {
+            input.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+        }
+        if (field==='role'){
             input.next('.select2-container').find('.select2-selection').addClass('is-invalid');
         }
     }
@@ -223,6 +263,8 @@ $('input, select').on('input change', function () {
     $('#emp_fname').val($(this).data('fname'));
     $('#emp_lname').val($(this).data('lname')); 
     $('#emp_email').val($(this).data('email')); 
+    let roleId = String($(this).attr('data-role'));
+    $('#updateUserRole').val(roleId).trigger('change');
     let des = $(this).data('designations');
     if (des) {
         let desArray = des.split(',');
@@ -240,7 +282,7 @@ $('input, select').on('input change', function () {
     $.ajax({
         url: 'handleform.php',
         type: 'POST',
-        data: $(this).serialize() + '&action=updateEmployee',
+        data: $(this).serialize() + '&action=updateEmployee&csrf_token='+CSRF_TOKEN,
         dataType: 'json',
         success: (resp) => {
             if (resp.status === 'validationError') {
@@ -281,7 +323,7 @@ $('input, select').on('input change', function () {
   //change pass form
   $('#formUpdateProfile').submit(function(e){
     e.preventDefault();
-    $.post('handleform.php', $(this).serialize()+"&action=changePassword" , resp=>{
+    $.post('handleform.php', $(this).serialize()+'&action=changePassword&csrf_token=' + CSRF_TOKEN , resp=>{
       if(resp.status==='success'){
         $('#profileUpdateModal').modal('hide');
         alert(JSON.stringify(resp.msg));
@@ -301,6 +343,7 @@ $('input, select').on('input change', function () {
     var formData = new FormData();
     formData.append('csvFile', fileData);
     formData.append('action', 'fileUpload');
+    formData.append('csrf_token', CSRF_TOKEN);
     $.ajax({
       url: 'handleform.php',
       type: 'post',
@@ -438,3 +481,9 @@ $("#notifList").on('click', '.notif-item', function(e){
 
 setInterval(loadNotifications,2000);
 
+$(document).on('click', '#markAllRead', function(e){
+  e.preventDefault();
+  $.post('handleform.php', {action: 'allRead'}, ()=>{
+    loadNotifications();
+  })
+});

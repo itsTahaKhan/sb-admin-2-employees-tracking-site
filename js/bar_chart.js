@@ -16,7 +16,7 @@ $.ajax({
         newChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Weekly active','Weekly inactive','Daily active'],
+                labels: ['Weekly active','Weekly inactive','Active today'],
                 datasets: [
                     {
                         data: [
@@ -87,7 +87,7 @@ $.ajax({
         newChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Monthly active','Monthly inactive','Daily active'],
+                labels: ['Monthly active','Monthly inactive','Active today'],
                 datasets: [
                     {
                         data: [

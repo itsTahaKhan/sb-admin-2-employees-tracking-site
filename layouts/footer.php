@@ -44,9 +44,11 @@
 
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <!-- Buttons extension CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
@@ -68,14 +70,16 @@
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
 
-    <!-- Your custom JS (allJS.js) -->
+    <script>
+        const CSRF_TOKEN = "<?= $_SESSION['csrf_token'] ?>"
+    </script>
+
+    <!-- Custom JS (allJS.js) -->
     <script src="js/allJS.js"></script>
 
     <!-- Custom fonts for this template-->
     <link rel="stylesheet" href="css/mycss.css">
     
-    
-
 </body>
 
 </html>

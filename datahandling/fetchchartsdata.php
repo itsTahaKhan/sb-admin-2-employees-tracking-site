@@ -38,8 +38,8 @@ if ($action === 'fetchBarDataWeek') {
 
     $sql = "
         SELECT 
-            SUM(last_activity >= (NOW() - INTERVAL 6 DAY)) AS active_users,
-            SUM(last_activity < (NOW() - INTERVAL 6 DAY) OR last_activity IS NULL) AS inactive_users,
+            SUM(last_activity >= (CURDATE() - INTERVAL 6 DAY)) AS active_users,
+            SUM(last_activity < (CURDATE() - INTERVAL 6 DAY) OR last_activity IS NULL) AS inactive_users,
             SUM(DATE(last_activity) = CURDATE()) AS daily_active_users
         FROM userdata
     ";

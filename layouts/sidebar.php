@@ -31,15 +31,16 @@
         session_start();
         if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true){
             header("Location: login.php");
+            exit;
         }
         else{
             $conn = new mysqli('localhost', 'root', '', 'company');
             $stmt = $conn->prepare("
                 UPDATE userdata 
-                SET 
+                SET
                     last_activity = NOW(),
                     status = 'active' 
-                WHERE 
+                WHERE
                     emp_id = ? AND
                     (last_activity IS NULL OR
                     last_activity < NOW() - INTERVAL 5 MINUTE)

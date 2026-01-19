@@ -11,3 +11,15 @@ if($action==='markRead'){
     $stmt->execute();
     exit;
 }
+
+if($action==='allRead'){
+    $query = '
+        UPDATE notifications
+        SET is_read = 1
+    ';
+    $conn->query($query);
+    echo json_encode([
+        'status' => 'success'
+    ]);
+    exit;
+}

@@ -1,15 +1,31 @@
 <?php
 date_default_timezone_set('Asia/Karachi');
-error_reporting(E_ALL); 
-ini_set('display_errors', 1);
-// handleform.php
-header_remove(); // ensure we can set content-type per response below
+header_remove(); 
 session_start();
 
+function verifyCSRF (){
+    if(empty($_SESSION['csrf_token']) || empty($_POST['csrf_token'])
+    || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        http_response_code(403);
+        jerror("Invalid CSRF Token");
+    }
+}
 
 require './datahandling/dbconnect.php';
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+if($action==='createCSRF'){
+    if(empty($_SESSION['csrf_token'])){
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+}
+$login_exempt = ['login'];
+if($_SERVER['REQUEST_METHOD']==='POST'){
+    if(!in_array($_POST['action'],$login_exempt)){
+        verifyCSRF();
+    }
+}
 
 // Helper: JSON response
 include './datahandling/jsonresponses.php';
@@ -28,6 +44,8 @@ include './datahandling/mark_read.php';
 
 //Employees data handling file
 include './datahandling/handleemp.php';
+
+include './datahandling/fetchroles.php';
 
 //Designations handling file
 include './datahandling/handledesign.php';
