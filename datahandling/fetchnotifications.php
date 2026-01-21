@@ -1,21 +1,9 @@
 <?php 
 
-if($action==='fetchNotifications'){    
-$stmt = $conn->prepare("SELECT design_name FROM employeedesignations WHERE emp_id = ?");
-    $stmt->bind_param('i',$_SESSION['id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $isAdmin = false;
-    while($r = $result->fetch_assoc()){
-        $designation = trim(strtolower($r['design_name']));
-        if($designation === 'admin'){
-            $isAdmin=true;
-            break;
-        }
-    }
-
-    if($isAdmin!==true){
-        return;
+if($action==='fetchNotifications'){
+    if(!in_array('fetch.notifications', $_SESSION['permissions'], true)){
+        jerror("You do not have permission");
+        exit;
     }
     
 $conn->query("

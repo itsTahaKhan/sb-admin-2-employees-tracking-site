@@ -16,8 +16,13 @@
 <div class="content">
   <div class="m-3">
     <div class="row">
-      <button id="fileUploadBtn" class="btn btn-success btn-sm" style="margin-bottom:5px;" data-toggle="modal" data-target="#fileUploadModal">Add (.csv) file to add multiple employees.</button>
-      <button id="addEmpBtn" class="btn btn-sm btn-success mb-2" style="margin-left:1vw;" data-toggle="modal" data-target="#modalAddEmployee">Add Employee</button>
+    <?php
+    if(in_array('employee.create', $_SESSION['permissions'], true)){
+      echo "<button id='fileUploadBtn' class='btn btn-success btn-sm' style='margin-bottom:5px;' data-toggle='modal' data-target='#fileUploadModal'>Add (.csv) file to add multiple employees.</button>";
+      echo "<button id='addEmpBtn' class='btn btn-sm btn-success mb-2' style='margin-left:1vw;' data-toggle='modal' data-target='#modalAddEmployee'>Add Employee</button>";
+    }
+    ?>
+      
     </div>
     <table id="empTable" class="table table-dark table-bordered table-striped">
       <thead>
@@ -27,7 +32,9 @@
           <th class="lname">Last name</th>
           <th class="email">Email</th>
           <th class="designation">Designation</th>
+          <th class="role">Role</th>
           <th class="action">Action</th>
+          
         </tr>
       </thead>
       <tbody>

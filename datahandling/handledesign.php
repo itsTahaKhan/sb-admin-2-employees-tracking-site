@@ -1,6 +1,10 @@
 <?php 
     // -------------------- FETCH: Designations (returns <tr> rows) --------------------
-if ($action === 'fetchDesignations') {
+if ($action === 'fetchDesignations'){
+    if(!in_array('design.fetch', $_SESSION['permissions'], true)){
+        http_response_code(403);
+        exit;
+    }
     header('Content-Type: text/html; charset=utf-8');
     $sql = "SELECT design_name FROM designations ORDER BY design_name";
     $res = $conn->query($sql);
@@ -45,6 +49,9 @@ if ($action === 'fetchDesignationOptions') {
 
 // -------------------- ADD: Designation --------------------
 if ($action === 'addDesignation') {
+    if(!in_array('design.create', $_SESSION['permissions'], true)){
+        jerror("You don't have permission.");
+    }
     $name = trim($_POST['design_name'] ?? '');
     if ($name === '') jerror('Designation name empty.');
     // check if exists
@@ -64,6 +71,9 @@ if ($action === 'addDesignation') {
 
 // -------------------- UPDATE: Designation --------------------
 if ($action === 'updateDesignation') {
+    if(!in_array('design.update', $_SESSION['permissions'], true)){
+        jerror("You don't have permission.");
+    }
     $old = trim($_POST['old_name'] ?? '');
     $new = trim($_POST['new_name'] ?? '');
     if ($old === '' || $new === '') jerror('Missing values.');
@@ -77,6 +87,9 @@ if ($action === 'updateDesignation') {
 
 // -------------------- DELETE: Designation --------------------
 if ($action === 'deleteDesignation') {
+    if(!in_array('design.delete', $_SESSION['permissions'], true)){
+        jerror("You don't have permission.");
+    }
     $design = trim($_POST['design_name'] ?? '');
     if ($design === '') jerror('No designation specified.');
     // check employees using it

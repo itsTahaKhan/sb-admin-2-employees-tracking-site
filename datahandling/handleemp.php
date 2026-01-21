@@ -4,6 +4,11 @@ include 'classes\employee.php';
 
 if ($action === 'fetchEmployeesServer') {
 
+    if(!in_array('employee.fetch', $_SESSION['permissions'], true)){
+        http_response_code(403);
+        exit;
+    }
+
     $start  = $_POST['start'] ?? 0;      
     $length = $_POST['length'] ?? 10;    
     $search = $_POST['search']['value'] ?? '';
@@ -30,10 +35,11 @@ if ($action === 'fetchEmployeesServer') {
     $total = $totalRes->fetch_assoc()['cnt'];
 
     $query = "
-        SELECT e.emp_id, e.fname, e.lname, e.email, e.role,
+        SELECT e.emp_id, e.fname, e.lname, e.email, r.role_name AS role,
            GROUP_CONCAT(ed.design_name) AS designations
         FROM employees e
         LEFT JOIN employeedesignations ed ON e.emp_id = ed.emp_id
+        LEFT JOIN roles r ON e.role = r.role_id
         $where
         GROUP BY e.emp_id
         ORDER BY e.emp_id
@@ -57,28 +63,70 @@ if ($action === 'fetchEmployeesServer') {
 
 
     $rows = [];
-while ($row = $dataRes->fetch_assoc()) {
-    $rows[] = [
-        "emp_id"      => (int)$row['emp_id'],
-        "fname"       => $row['fname'],
-        "lname"       => $row['lname'],
-        "email"       => $row['email'],
-        "designations"=> $row['designations'],
-        "role" => $row['role'],
-        "action"      => "
-            <button style='margin:2px;' class='btn btn-sm btn-info updEmp' 
-                data-id='{$row['emp_id']}'
-                data-fname='{$row['fname']}'
-                data-lname='{$row['lname']}'
-                data-email='{$row['email']}'
-                data-role='{$row['role']}'
-                data-designations='{$row['designations']}'>Update</button>
-                
-        <button style='margin:2px;' class='btn btn-sm btn-danger delEmp'
-                data-id='{$row['emp_id']}'>Delete</button>
-        "
-    ];
+if(in_array('employee.update', $_SESSION['permissions'], true) && in_array('employee.delete', $_SESSION['permissions'], true)){
+    while ($row = $dataRes->fetch_assoc()) {
+        $rows[] = [
+            "emp_id"      => (int)$row['emp_id'],
+            "fname"       => $row['fname'],
+            "lname"       => $row['lname'],
+            "email"       => $row['email'],
+            "designations"=> $row['designations'],
+            "role" => ucwords($row['role']),
+            "action"      => "
+                <button style='margin:2px;' class='btn btn-sm btn-info updEmp' 
+                    data-id='{$row['emp_id']}'
+                    data-fname='{$row['fname']}'
+                    data-lname='{$row['lname']}'
+                    data-email='{$row['email']}'
+                    data-role='{$row['role']}'
+                    data-designations='{$row['designations']}'>Update</button>
+
+                <button style='margin:2px;' class='btn btn-sm btn-danger delEmp'
+                    data-id='{$row['emp_id']}'>Delete</button>
+            "
+        ];
+    }
 }
+if(in_array('employee.update', $_SESSION['permissions'], true)){
+    while ($row = $dataRes->fetch_assoc()) {    
+        $rows[] = [
+            "emp_id"      => (int)$row['emp_id'],
+            "fname"       => $row['fname'],
+            "lname"       => $row['lname'],
+            "email"       => $row['email'],
+            "designations"=> $row['designations'],
+            "role" => ucwords($row['role']),
+            "action"      => "
+                <button style='margin:2px;' class='btn btn-sm btn-info updEmp' 
+                    data-id='{$row['emp_id']}'
+                    data-fname='{$row['fname']}'
+                    data-lname='{$row['lname']}'
+                    data-email='{$row['email']}'
+                    data-role='{$row['role']}'
+                    data-designations='{$row['designations']}'>Update
+                </button>
+            "
+        ];
+    }
+}
+if(in_array('employee.fetch', $_SESSION['permissions'], true)){
+    while ($row = $dataRes->fetch_assoc()) {
+        $rows[] = [
+            "emp_id"      => (int)$row['emp_id'],
+            "fname"       => $row['fname'],
+            "lname"       => $row['lname'],
+            "email"       => $row['email'],
+            "designations"=> $row['designations'],
+            "role" => ucwords($row['role']),
+            "action"      => "Not Authorized"
+        ];
+    }
+}
+else{
+    http_response_code(403);
+    exit;
+}
+
 
     echo json_encode([
         "draw"            => intval($_POST['draw']),
@@ -87,10 +135,13 @@ while ($row = $dataRes->fetch_assoc()) {
         "data"            => $rows
     ]);
     exit;
-} 
+}
 
 // -------------------- ADD Employee --------------------
 if ($action === 'addEmployee') {
+    if(!in_array('employee.create', $_SESSION['permissions'], true)){
+        jerror('You do not have permission');
+    }
     $emp_id = intval($_POST['emp_id'] ?? 0);
     $fname = trim(ucwords(trim($_POST['fname'])) ?? '');
     $lname = trim(ucwords(trim($_POST['lname'])) ?? '');
@@ -119,6 +170,9 @@ if ($action === 'addEmployee') {
 }
 // -------------------- UPDATE Employee --------------------
 if ($action === 'updateEmployee') {
+    if(!in_array('employee.update', $_SESSION['permissions'], true)){
+        jerror('You do not have permission');
+    }
     $orig = intval($_POST['orig_emp_id'] ?? 0);
     $emp_id = intval($_POST['emp_id'] ?? 0);
     $fname = trim(ucwords($_POST['fname']) ?? '');
@@ -146,6 +200,9 @@ if ($action === 'updateEmployee') {
 
 // -------------------- DELETE Employee --------------------
 if ($action === 'deleteEmployee') {
+    if(!in_array('employee.delete', $_SESSION['permissions'], true)){
+        jerror('You do not have permission');
+    }
     $emp_id = intval($_POST['emp_id'] ?? 0);
     $employee = new Employee();
     $employee->setID($emp_id);

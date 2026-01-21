@@ -19,43 +19,48 @@ if($action === 'login'){
     $stmt->execute();
     $result = $stmt->get_result();
     $isAdmin = false;
-    while($r = $result->fetch_assoc()){
-        $designation = trim(strtolower($r['design_name']));
-        if($designation === 'admin'){
-            $isAdmin=true;
-            break;
+
+    $stored_pass = $res['pass'];
+        
+    if(password_verify($login_pass, $stored_pass)){
+        $_SESSION['id'] = $res['emp_id'];
+        $_SESSION['name'] = $res['fname'];
+        $_SESSION['email'] = $res['email'];
+        $_SESSION['role'] = $res['role'];
+        $_SESSION['logged_in'] = true;
+        $stmt = $conn->prepare("
+            UPDATE userdata
+            SET last_activity = NOW(), status = 'active'
+            WHERE emp_id = ?
+        ");
+        $stmt->bind_param("i", $_SESSION['id']);
+        $stmt->execute();
+        if(empty($_SESSION['csrf_token'])){
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
+        $stmt = $conn->prepare("
+            SELECT p.perm_name AS permissions
+            FROM perms p
+            LEFT JOIN role_perms rp ON p.perm_id = rp.perm_id
+            WHERE rp.role_id = ?
+        ");
+        $stmt->bind_param('i', $res['role']);
+        if(!$stmt->execute()){
+            http_response_code(403);
+        }
+        $res = $stmt->get_result();
+
+        $permissions = [];
+        while($r = $res->fetch_assoc()){
+            $permissions[] = $r['permissions'];
+        }
+        $_SESSION['permissions'] = $permissions;
+        
+        jsuccess("Logging in!");
     }
-        $stored_pass = $res['pass'];
-        
-        if(password_verify($login_pass, $stored_pass)){
-            if($isAdmin===true){
-                $_SESSION['id'] = $res['emp_id'];
-                $_SESSION['name'] = $res['fname'];
-                $_SESSION['email'] = $res['email'];
-                $_SESSION['role'] = $res['role'];
-                $_SESSION['logged_in'] = true;
-                $stmt = $conn->prepare("
-                    UPDATE userdata
-                    SET last_activity = NOW(), status = 'active'
-                    WHERE emp_id = ?
-                ");
-                $stmt->bind_param("i", $_SESSION['id']);
-                $stmt->execute();
-                if(empty($_SESSION['csrf_token'])){
-                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-                }
-                loginCheckAdmin('Logging in as Admin');
-                }
-            else{
-                loginCheckEmp("Employees don't have access to the data");
-            }
-        }
-        else{
-            jerror('Incorrect Password');
-        }
-        
-        
+    else{
+        jerror('Incorrect Password');
+    }
 }
 
 if($action === 'logout'){

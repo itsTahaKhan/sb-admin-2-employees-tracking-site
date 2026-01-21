@@ -41,6 +41,7 @@ jQuery(document).ready(function($){
       {data: "lname"},
       {data: "email"},
       {data: "designations"},
+      {data: "role"},
       {data: "action"}
     ]
   });
@@ -76,6 +77,13 @@ jQuery(document).ready(function($){
   }
 
   function hideAll() { $('.forms').hide(); 
+  }
+
+  //------------load sidebar---------------
+  function loadSidebar(){
+    $.post('handleform.php', {action: 'fetchSidebar'}, html=>{
+      
+    });
   }
 
   //------Load Designations--------
@@ -519,13 +527,10 @@ function loadNotifications(){
     url: 'handleform.php',
     type: 'post',
     dataType: 'json',
-    data: { action: 'fetchNotifications' },
+    data: { action: 'fetchNotifications'},
     success: resp => {
 
-      if(resp.status !== 'success'){
-        return;
-      }
-
+    if(resp.status==='success'){
       $('#notifCount').text(resp.unread);
       $('#notifCount2').text(" (" + resp.unread + ")");
       $('#notifScrollArea').empty();
@@ -550,6 +555,15 @@ function loadNotifications(){
         `);
       });
     }
+    else if(resp.status==='error'){
+      $('#notifCount').text('0');
+      $('#notifCount2').text(" (" + '0' + ")");
+      $('#notifScrollArea').empty();
+      $('#notifScrollArea').html(
+        '<span class="dropdown-item text-muted">' + resp.msg + '</span>'
+      );
+    }
+    },
   });
 }
 

@@ -93,7 +93,11 @@
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="employees.php">Employees</a>
-                        <a class="collapse-item" href="designations.php">Designations</a>
+                        <?php
+                            if(in_array('design.fetch', $_SESSION['permissions'], true)){
+                                echo "<a class='collapse-item' href='designations.php'>Designations</a>";
+                            }
+                        ?>
                         <a class="collapse-item" href="hierarchy.php">Hierarchy</a>
                     </div>
                 </div>
