@@ -18,6 +18,10 @@ $stmt = $conn->prepare("SELECT design_name FROM employeedesignations WHERE emp_i
         return;
     }
     
+$conn->query("
+    DELETE FROM notifications 
+    WHERE (created_at < (CURDATE() - INTERVAL 15 DAY))
+");
 
 $notifications = [];
 

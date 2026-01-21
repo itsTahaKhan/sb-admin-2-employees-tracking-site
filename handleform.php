@@ -13,6 +13,10 @@ function verifyCSRF (){
 
 require './datahandling/dbconnect.php';
 
+
+// Helper: JSON response
+include './datahandling/jsonresponses.php';
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if($action==='createCSRF'){
@@ -27,8 +31,23 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     }
 }
 
-// Helper: JSON response
-include './datahandling/jsonresponses.php';
+$stmt = $conn->prepare("
+    SELECT p.perm_name AS permissions
+    FROM perms p
+    LEFT JOIN role_perms rp ON p.perm_id = rp.perm_id
+    WHERE rp.role_id = ?
+");
+$stmt->bind_param('i', $_SESSION['role']);
+if(!$stmt->execute()){
+    http_response_code(403);
+}
+$res = $stmt->get_result();
+
+$permissions = [];
+while($r = $res->fetch_assoc()){
+    $permissions[] = $r;
+}
+
 
 //Login/logout
 include './datahandling/handlelogin.php';

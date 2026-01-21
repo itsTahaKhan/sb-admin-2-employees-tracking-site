@@ -131,7 +131,20 @@ function loadUserRoles() {
   $('#formAddDesignation').submit(function(e){
     e.preventDefault(); 
     $.post('handleform.php',{action:'addDesignation',design_name:$('#designationadd').val().trim()}, resp=>{
-      alert(JSON.stringify(resp.msg)); 
+      if(resp.status==='success'){
+        Swal.fire({
+          icon: 'success',
+          title: '!Success',
+          text: JSON.stringify(resp.msg)
+        });
+      }
+      else{
+        Swal.fire({
+          icon: 'error',
+          title: '!Error',
+          text: JSON.stringify(resp.msg)
+        });
+      }
       $('#designationadd').val(''); 
       loadDesignations(); 
       loadDesignationOptions();
@@ -155,11 +168,19 @@ $('#formAddUser').submit(function (e) {
               showFormErrors('formAddUser',resp.msg);
             }
             else if(resp.status==='error'){
-              alert(resp.msg);
+              Swal.fire({
+                icon: 'error',
+                title: '!Error',
+                text: resp.msg
+              });
               myTable.ajax.reload(null, false);
             } 
             else {
-              alert(resp.msg);
+              Swal.fire({
+                icon: 'success',
+                title: '!Success',
+                text: resp.msg
+              });
               this.reset();
               $('#addUserDesignation').val([]).trigger('change');
               $('#addUserRole').val([]).trigger('change');
@@ -223,7 +244,20 @@ $('input, select').on('input change', function () {
   $(document).on('click','.delDes',function(){
     if(!confirm('Delete designation "'+$(this).data('name')+'"?')) return;
     $.post('handleform.php',{action:'deleteDesignation',design_name:$(this).data('name')},resp=>{
-      alert(JSON.stringify(resp.msg));
+      if(resp.status==='success'){
+        Swal.fire({
+          icon: 'success',
+          title: '!Success',
+          text: JSON.stringify(resp.msg)
+        });
+      }
+      else{
+        Swal.fire({
+          icon: 'error',
+          title: '!Error',
+          text: JSON.stringify(resp.msg)
+        });
+      }
       loadDesignations(); 
       myTable.ajax.reload(null,false); 
       loadDesignationOptions();});
@@ -240,7 +274,20 @@ $('input, select').on('input change', function () {
   $('#formUpdateDesignation').submit(function(e){
     e.preventDefault(); 
     $.post('handleform.php',{action:'updateDesignation',old_name:$('#des_old_name').val(),new_name:$('#des_new_name').val().trim()}, resp=>{
-      alert(JSON.stringify(resp.msg)); 
+      if(resp.status==='success'){
+        Swal.fire({
+          icon: 'success',
+          title: '!Success',
+          text: JSON.stringify(resp.msg)
+        });
+      }
+      else{
+        Swal.fire({
+          icon: 'error',
+          title: '!Error',
+          text: JSON.stringify(resp.msg)
+        });
+      }
       $('#desUpdateModal').modal('hide'); 
       loadDesignations(); 
       myTable.ajax.reload(null,false); 
@@ -252,7 +299,20 @@ $('input, select').on('input change', function () {
   $(document).on('click','.delEmp',function(){
     if(!confirm('Delete employee ID '+$(this).data('id')+'?')) return;
     $.post('handleform.php',{action:'deleteEmployee',emp_id:$(this).data('id')}, resp=>{
-      alert(JSON.stringify(resp.msg)); 
+      if(resp.status==='success'){
+        Swal.fire({
+          icon: 'success',
+          title: '!Success',
+          text: JSON.stringify(resp.msg)
+        });
+      }
+      else{
+        Swal.fire({
+          icon: 'error',
+          title: '!Error',
+          text: JSON.stringify(resp.msg)
+        });
+      }
       myTable.ajax.reload(null,false);});
   });
 
@@ -289,11 +349,19 @@ $('input, select').on('input change', function () {
               showFormErrors('formUpdateEmployee',resp.msg);
             }
             else if(resp.status==='error'){
-              alert(resp.msg);
+              Swal.fire({
+                icon: 'error',
+                title: '!Error',
+                text: JSON.stringify(resp.msg)
+              });
               myTable.ajax.reload(null, false);
             } 
             else {
-              alert(resp.msg);
+              Swal.fire({
+                icon: 'success',
+                title: '!Success',
+                text: JSON.stringify(resp.msg)
+              });
               $(this)[0].reset();
               $('#empUpdateModal').modal('hide');
               $('#emp_design_select').val([]).trigger('change');
@@ -308,10 +376,9 @@ $('input, select').on('input change', function () {
   $(document).on('click', '#logout', function(e){
     e.preventDefault();
     $.post('handleform.php', {action:'logout'}, resp=>{
-      if(resp.status==='success'){
-        alert(JSON.stringify(resp.msg));
-        window.location.href = 'login.php';
-      }
+        if(resp.status==='success'){
+          window.location.href = 'login.php';
+        }
     });
   });
 
@@ -326,11 +393,20 @@ $('input, select').on('input change', function () {
     $.post('handleform.php', $(this).serialize()+'&action=changePassword&csrf_token=' + CSRF_TOKEN , resp=>{
       if(resp.status==='success'){
         $('#profileUpdateModal').modal('hide');
-        alert(JSON.stringify(resp.msg));
+        Swal.fire({
+          icon: 'success',
+          title: '!Success',
+          text: JSON.stringify(resp.msg)
+        });
         this.reset();
       }
       else{
-        alert(JSON.stringify(resp.msg));old_pass.reset();
+        Swal.fire({
+          icon: 'error',
+          title: '!Error',
+          text: JSON.stringify(resp.msg)
+        });
+        old_pass.reset();
         this.old_pass.reset();
       }
     });
@@ -352,7 +428,11 @@ $('input, select').on('input change', function () {
       processData: false,
       success: function(resp){
         if(resp.status==='success'){
-          alert(JSON.stringify(resp.msg));
+          Swal.fire({
+            icon: 'success',
+            title: '!Success',
+            text: JSON.stringify(resp.msg)
+          });
           $('#fileUploadModal').modal('hide');
           myTable.ajax.reload(null,false);
           loadDesignations();
@@ -360,7 +440,11 @@ $('input, select').on('input change', function () {
         }
         else if(resp.status==='error'){
           window.location.href = 'fixrows.csv';
-          alert(JSON.stringify(resp.msg + "Fix the rows"));
+          Swal.fire({
+            icon: 'error',
+            title: '!Error',
+            text: JSON.stringify(resp.msg) + "fix the rows"
+          });
           $("#fileUploadForm")[0].reset();
           $('#fileUploadModal').modal('hide');
           myTable.ajax.reload(null,false);
@@ -368,7 +452,11 @@ $('input, select').on('input change', function () {
           loadDesignationOptions();
         }
         else{
-          alert(JSON.stringify(resp.msg));
+          Swal.fire({
+            icon: 'error',
+            title: '!Error',
+            text: JSON.stringify(resp.msg)
+          });
           myTable.ajax.reload(null,false);
           loadDesignations();
           loadDesignationOptions();
@@ -401,7 +489,11 @@ $('input, select').on('input change', function () {
       success: function(resp){
         if(resp.status==='success'){
           $('#hierarchyModal').modal('hide');       
-          alert(JSON.stringify(resp.msg));
+          Swal.fire({
+            icon: 'success',
+            title: '!Success',
+            text: JSON.stringify(resp.msg)
+          });
           myTable1.ajax.reload(null, false);
           
         } 
@@ -461,10 +553,6 @@ function loadNotifications(){
   });
 }
 
-
-
-
-
 $("#notifList").on('click', '.notif-item', function(e){
   e.preventDefault();
   e.stopPropagation();
@@ -479,11 +567,12 @@ $("#notifList").on('click', '.notif-item', function(e){
   if (c > 0) $('#notifCount').text(c - 1);
 });
 
-setInterval(loadNotifications,2000);
-
 $(document).on('click', '#markAllRead', function(e){
   e.preventDefault();
   $.post('handleform.php', {action: 'allRead'}, ()=>{
     loadNotifications();
   })
 });
+
+
+setInterval(loadNotifications,2000);

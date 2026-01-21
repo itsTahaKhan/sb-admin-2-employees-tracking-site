@@ -3,7 +3,11 @@ if($action === 'login'){
     $login_email = $_POST['login_email'];
     $login_pass = $_POST['login_pass'];
     if($login_email === '' || $login_pass === '') jerror('Enter credentials');
-    $stmt = $conn->prepare("SELECT emp_id,fname,email,pass FROM employees WHERE email = ?");
+    $stmt = $conn->prepare("
+        SELECT emp_id,fname,email,pass,role 
+        FROM employees 
+        WHERE email = ?
+    ");
     $stmt->bind_param('s', $login_email);
     $stmt->execute();
     $res = $stmt->get_result()->fetch_assoc();
@@ -29,6 +33,7 @@ if($action === 'login'){
                 $_SESSION['id'] = $res['emp_id'];
                 $_SESSION['name'] = $res['fname'];
                 $_SESSION['email'] = $res['email'];
+                $_SESSION['role'] = $res['role'];
                 $_SESSION['logged_in'] = true;
                 $stmt = $conn->prepare("
                     UPDATE userdata

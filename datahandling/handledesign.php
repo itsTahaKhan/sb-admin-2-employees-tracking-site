@@ -70,9 +70,9 @@ if ($action === 'updateDesignation') {
     $stmt = $conn->prepare("UPDATE designations SET design_name = ? WHERE design_name = ?");
     $stmt->bind_param('ss', $new, $old);
     if ($stmt->execute()) {
-        if ($stmt->affected_rows > 0) jsuccess('Designation updated.');
-        else jerror('No rows updated.');
-    } else jerror('Update failed: ' . $stmt->error);
+        jsuccess("Updated!");
+    } 
+    else jerror('Update failed: ' . $stmt->error);
 }
 
 // -------------------- DELETE: Designation --------------------
@@ -93,4 +93,3 @@ if ($action === 'deleteDesignation') {
     if ($stmt2->execute()) jsuccess('Designation deleted.');
     else jerror('Delete failed: ' . $stmt2->error);
 }
-?>

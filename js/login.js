@@ -21,7 +21,11 @@
         alert(JSON.stringify(resp.msg));
       }
       else{
-        alert(JSON.stringify(resp.msg));
+        Swal.fire({
+          icon: 'error',
+          title: '!Error',
+          text: JSON.stringify(resp.msg)
+        });
       }
     });
   });
