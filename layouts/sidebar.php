@@ -98,7 +98,11 @@
                                 echo "<a class='collapse-item' href='designations.php'>Designations</a>";
                             }
                         ?>
-                        <a class="collapse-item" href="hierarchy.php">Hierarchy</a>
+                        <?php
+                            if(in_array('logs.fetch', $_SESSION['permissions'], true)){
+                                echo "<a class='collapse-item' href='logs.php'>Logs</a>";
+                            }
+                        ?>
                     </div>
                 </div>
             </li>

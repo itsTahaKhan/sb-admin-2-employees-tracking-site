@@ -13,7 +13,7 @@ if($action==='fileUpload'){
         exit;
     }
     else{
-        $headerExpected = array('emp_id', 'fname', 'lname', 'email', 'design_name', 'pass');
+        $headerExpected = array('emp_id', 'fname', 'lname', 'email', 'design_name', 'pass', 'role');
         if($_FILES['csvFile']['error'] === 0){
             $file = fopen($_FILES['csvFile']['tmp_name'], 'r');
             $headers = fgetcsv($file);
@@ -51,6 +51,20 @@ if($action==='fileUpload'){
                 $file_design_name = $row['design_name'];
                 $file_design_name = array_map('trim', explode('|', $file_design_name));
                 $file_pass = $row['pass'];
+                $file_role = $row['role'];
+                if($file_role==='admin'){
+                    $file_role='1';
+                }
+                elseif($file_role==='employee'){
+                    $file_role = '2';
+                }
+                elseif($file_role==='hr'){
+                    $file_role = '3';
+                }
+                else{
+                    jerror('Not correct role name');
+                    exit;
+                }
 				$continue = false;
                 foreach($file_design_name as $des){
 					if(!in_array($des, $designations)){
@@ -63,37 +77,65 @@ if($action==='fileUpload'){
                 	in_array($file_id,$ids) || 
 	                !filter_var($file_email,FILTER_VALIDATE_EMAIL)){
 						$wrong_designations = implode('|',$file_design_name);
-    	                $missedRows[$rowcounter] = [$file_id, $file_fname, $file_lname, $file_email, $wrong_designations, $file_pass];
+    	                $missedRows[$rowcounter] = [$file_id, $file_fname, $file_lname, $file_email, $wrong_designations, $file_pass, $file_role];
         	            $leftCounter++;
             	        $rowcounter++;
                 	    continue;
                 }
                 $hashed = password_hash($file_pass, PASSWORD_DEFAULT);
+                try{
+                $conn->begin_transaction();
                 $stmt = $conn->prepare("
                     INSERT INTO 
-                    employees (emp_id, fname, lname, email, pass, created_at) 
-                    VALUES(?,?,?,?,?,?) "
+                    employees (emp_id, fname, lname, email, pass) 
+                    VALUES(?,?,?,?,?) "
                 );
                 $stmt->bind_param(
-                    'isssss',
-                    $file_id,$file_fname,$file_lname,$file_email,$hashed,$date
-		);  
-                if($stmt->execute()){
-                    foreach($file_design_name as $des){
+                    'issss',
+                    $file_id,$file_fname,$file_lname,$file_email,$hashed
+		        ); 
+                if(!$stmt->execute()){
+                    throw new Exception("Error inserting into employee table");
+                }
+                
+                foreach($file_design_name as $des){
                         $stmt1 = $conn->prepare("
                         INSERT INTO 
                             employeedesignations(emp_id, design_name)
                             VALUES(?,?)"
                         );
                 	$stmt1->bind_param('is', $file_id,$des);
-                        if($stmt1->execute()){            
-                            $addCounter++;
-                            $rowcounter++;
+                        if(!$stmt1->execute()){            
+                            throw new Exception("Error inserting into emplouyeedesignations");
                         }
-                    }
-
-
                 }
+                $stmt2 = $conn->prepare("
+                    INSERT INTO emp_roles(role_id, emp_id)
+                    VALUES(?,?)
+                ");
+                $stmt2->bind_param('ii', $file_role, $file_id);
+                if(!$stmt2->execute()){
+                    throw new Exception("Error inserting into emp_roles");
+                }
+                
+                $msg = "Multiple employees added through file.";
+                $stmt3 = $conn->prepare("
+                    INSERT INTO notifications (message)
+                    VALUES(?)
+                ");
+                $stmt3->bind_param('s',$msg);
+                if(!$stmt3->execute()){
+                    throw new Exception("Notification not sent");
+                }
+
+                $conn->commit();
+                $addCounter++;
+            }
+            catch(Exception $e){
+                $conn->rollback();
+                $leftCounter++;
+            }
+            $rowcounter++;
             }
             $newFile = fopen('fixrows.csv', 'w');
             fputcsv($newFile, $headerExpected);

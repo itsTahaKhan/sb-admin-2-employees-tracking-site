@@ -134,23 +134,31 @@ class Employee{
             $hashpass = password_hash($this->pass, PASSWORD_DEFAULT);
             $date = date('Y-m-d H:i:s');
             // Validation Done now adding
-            $stmt1 = $this->conn->prepare("
+            $stmt = $this->conn->prepare("
             INSERT INTO
-              employees (emp_id, fname, lname, email, pass, created_at, role)
-              VALUES (?,?,?,?,?,?,?)            
+              employees (emp_id, fname, lname, email, pass)
+              VALUES (?,?,?,?,?)           
             ");
-            $stmt1->bind_param('isssssi', $this->emp_id, $this->fname, $this->lname, $this->email, $hashpass, $date, $this->role);
-            if(!$stmt1->execute()){
+            $stmt->bind_param('issss', $this->emp_id, $this->fname, $this->lname, $this->email, $hashpass);
+            if(!$stmt->execute()){
                 throw new Exception("Adding employee failed");
             }
-            $stmt = $this->conn->prepare("INSERT INTO employeedesignations (emp_id, design_name) VALUES (?, ?)");
+            $stmt1 = $this->conn->prepare("INSERT INTO employeedesignations (emp_id, design_name) VALUES (?, ?)");
             foreach($this->designation as $des){
-                $stmt->bind_param('is', $this->emp_id,$des);
-                if(!$stmt->execute()){
+                $stmt1->bind_param('is', $this->emp_id,$des);
+                if(!$stmt1->execute()){
                     throw new Exception("Adding designation failed");
                 }
-                
             }
+            $stmt4 = $this->conn->prepare("
+                INSERT INTO emp_roles(emp_id, role_id)
+                VALUES(?,?)
+            ");
+            $stmt4->bind_param('ii', $this->emp_id, $this->role);
+            if(!$stmt4->execute()){
+                throw new Exception("Role not added");
+            }
+            
             $stmt2 = $this->conn->prepare("
                 INSERT INTO userdata(emp_id,status)
                 VALUES (?, ?) 
@@ -171,12 +179,23 @@ class Employee{
                 throw new Exception("Notification not sent");
             }
 
+            $log = "{$_SESSION['name']} {$_SESSION['lname']} added employee $this->fname $this->lname";
+
+            $stmt5 = $this->conn->prepare("
+                INSERT INTO logs (log)
+                VALUES(?)
+            ");
+            $stmt5->bind_param('s', $log);
+            if(!$stmt5->execute()){
+                throw new Exception("No log maintained");
+            }
+
             $this->conn->commit();
             jsuccess("Employee added");
         }
         catch(Exception $e){
             $this->conn->rollback();
-            jerror("Employee not added. " . $e);
+            jerror("Employee not added. ");
         }
     }
 
@@ -209,6 +228,18 @@ class Employee{
         if(!$stmt1->execute()){
             throw new Exception("Notification not sent");
         }
+
+        $log = "{$_SESSION['name']} {$_SESSION['lname']} deleted employee $fname $lname";
+
+        $stmt5 = $this->conn->prepare("
+            INSERT INTO logs (log)
+            VALUES(?)
+        ");
+        $stmt5->bind_param('s', $log);
+        if(!$stmt5->execute()){
+            throw new Exception("No log maintained");
+        }
+
         
         $this->conn->commit();
         jsuccess("Employee deleted successfully");
@@ -224,18 +255,92 @@ class Employee{
         try{
             $this->conn->begin_transaction();
 
+            $stmt6 = $this->conn->prepare("
+                SELECT e.emp_id, e.fname, e.lname, e.email,
+                GROUP_CONCAT(ed.design_name) AS designations, MAX(er.role_id) AS role
+                FROM employees e
+                LEFT JOIN employeedesignations ed ON e.emp_id = ed.emp_id
+                LEFT JOIN emp_roles er ON e.emp_id = er.emp_id
+                WHERE e.emp_id = ?
+                GROUP BY e.emp_id
+            ");
+            $stmt6->bind_param('i', $this->orig);
+            if(!$stmt6->execute()){
+                throw new Exception("Select not working");
+            }
+            $result = $stmt6->get_result();
+            while($res = $result->fetch_assoc()){
+                $id = $res['emp_id'];
+                $fname = $res['fname'];
+                $lname = $res['lname'];
+                $email = $res['email'];
+                $designation = $res['designations'];
+                $role = intval($res['role']);
+            }
+            $newValues = [];
+            $valuesBefore = [];
+            $designation = array_map('trim', explode(',', $designation));
+            $updatedColumns = [];
+            if($id!==$this->emp_id){
+                $updatedColumns[] = 'Employee id';
+                $valuesBefore[] = $id;
+                $newValues[] = $this->emp_id;
+            }
+            if($fname!==$this->fname){
+                $updatedColumns[] = 'First name';
+                $valuesBefore[] = $fname;
+                $newValues[] = $this->fname;
+            }
+            if($lname!==$this->lname){
+                $updatedColumns[] = 'Last name';
+                $valuesBefore[] = $lname;
+                $newValues[] = $this->lname;
+            }
+            if($email!==$this->email){
+                $updatedColumns[] = 'Email';
+                $valuesBefore[] = $email;
+                $newValues[] = $this->email;
+            }
+            if(array_diff($designation, $this->designation)){
+                $updatedColumns[] = 'Designation';
+                $valuesBefore[] = implode(',', $designation);
+                $newValues[] = implode(',', $this->designation);
+            }
+            if($role!=$this->role){
+                $updatedColumns[] = 'Role';
+                $valuesBefore[] = $role;
+                $newValues[] = $this->role;
+            }
+
             $stmt1 = $this->conn->prepare("DELETE FROM employeedesignations WHERE emp_id = ?");
             $stmt1->bind_param('i', $this->orig);
             if(!$stmt1->execute()){
                 throw new Exception("Designations not deleted");
             }
 
-            $stmt = $this->conn->prepare("
-                UPDATE employees SET emp_id = ?, fname = ?, lname = ?, email = ?, role = ? WHERE emp_id = ?
+            $stmt4 = $this->conn->prepare("
+                DELETE FROM emp_roles WHERE emp_id = ?
             ");
-            $stmt->bind_param('isssii', $this->emp_id, $this->fname, $this->lname, $this->email, $this->role, $this->orig);    
+            $stmt4->bind_param('i', $this->emp_id);
+            if(!$stmt4->execute()){
+                throw new Exception("Role not deleted");
+            }
+
+            $stmt = $this->conn->prepare("
+                UPDATE employees SET emp_id = ?, fname = ?, lname = ?, email = ? WHERE emp_id = ?
+            ");
+            $stmt->bind_param('isssi', $this->emp_id, $this->fname, $this->lname, $this->email, $this->orig);    
             if(!$stmt->execute()){
                 throw new Exception("Employee table not updated");
+            }
+
+            $stmt5 = $this->conn->prepare("
+                INSERT INTO emp_roles(emp_id, role_id)
+                VALUES(?,?)
+            ");
+            $stmt5->bind_param('ii', $this->emp_id, $this->role);
+            if(!$stmt5->execute()){
+                throw new Exception("New role not inserted");
             }
 
             $stmt2 = $this->conn->prepare("INSERT INTO employeedesignations (emp_id, design_name) VALUES (?, ?)");
@@ -255,13 +360,29 @@ class Employee{
             if(!$stmt3->execute()){
                 throw new Exception("Notification not sent");
             }
-            
+
+            $updatedColumns = implode(',', $updatedColumns);
+            $valuesBefore = implode(',', $valuesBefore);
+            $newValues = implode(',', $newValues);
+
+            $action = 'Update';
+            $actor = "{$_SESSION['name']} {$_SESSION['lname']}";
+            $actor_id = "{$_SESSION['id']}";
+            $stmt7 = $this->conn->prepare("
+                INSERT INTO logs(action, columns_updated, actor, values_before, values_after, actor_id)
+                VALUES(?,?,?,?,?,?)
+            ");
+            $stmt7->bind_param('ssssss', $action, $updatedColumns, $actor, $valuesBefore, $newValues, $actor_id);
+            if(!$stmt7->execute()){
+                throw new Exception("log not maintained");
+            }
+
             $this->conn->commit();
             jsuccess("Employee updated");
         }
         catch(Exception $e){
             $this->conn->rollback();
-            jerror("Employee not updated");
+            jerror("Employee not updated" . $e);
         }
     }
 

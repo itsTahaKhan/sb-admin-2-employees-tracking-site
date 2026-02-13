@@ -24,22 +24,25 @@ if ($action === 'fetchEmployeesServer') {
                OR e.email LIKE ?
                OR e.emp_id LIKE ?
                OR ed.design_name LIKE ?
+               OR r.role_name LIKE ?
         ";
 
         $searchLike = "%$search%";
-        $params = [$searchLike, $searchLike, $searchLike, $searchLike, $searchLike];
-        $types = "sssss";
+        $params = [$searchLike, $searchLike, $searchLike, $searchLike, $searchLike, $searchLike];
+        $types = "ssssss";
     }
 
     $totalRes = $conn->query("SELECT COUNT(*) AS cnt FROM employees");
     $total = $totalRes->fetch_assoc()['cnt'];
 
     $query = "
-        SELECT e.emp_id, e.fname, e.lname, e.email, r.role_name AS role,
+        SELECT e.emp_id, e.fname, e.lname, e.email, MAX(r.role_id) AS role_id, 
+           MAX(r.role_name) AS role,
            GROUP_CONCAT(ed.design_name) AS designations
         FROM employees e
         LEFT JOIN employeedesignations ed ON e.emp_id = ed.emp_id
-        LEFT JOIN roles r ON e.role = r.role_id
+        LEFT JOIN emp_roles er ON e.emp_id = er.emp_id
+        JOIN roles r ON r.role_id = er.role_id
         $where
         GROUP BY e.emp_id
         ORDER BY e.emp_id
@@ -53,7 +56,7 @@ if ($action === 'fetchEmployeesServer') {
         $params[] = $start;
         $params[] = $length;
         $stmt->bind_param($types, ...$params);
-    } 
+    }
     else {
         $stmt->bind_param("ii", $start, $length);
     }
@@ -78,7 +81,7 @@ if(in_array('employee.update', $_SESSION['permissions'], true) && in_array('empl
                     data-fname='{$row['fname']}'
                     data-lname='{$row['lname']}'
                     data-email='{$row['email']}'
-                    data-role='{$row['role']}'
+                    data-role='{$row['role_id']}'
                     data-designations='{$row['designations']}'>Update</button>
 
                 <button style='margin:2px;' class='btn btn-sm btn-danger delEmp'
@@ -102,7 +105,7 @@ if(in_array('employee.update', $_SESSION['permissions'], true)){
                     data-fname='{$row['fname']}'
                     data-lname='{$row['lname']}'
                     data-email='{$row['email']}'
-                    data-role='{$row['role']}'
+                    data-role='{$row['role_id']}'
                     data-designations='{$row['designations']}'>Update
                 </button>
             "
@@ -117,11 +120,11 @@ if(in_array('employee.fetch', $_SESSION['permissions'], true)){
             "lname"       => $row['lname'],
             "email"       => $row['email'],
             "designations"=> $row['designations'],
-            "role" => ucwords($row['role']),
+            "role" => $row['role_id'],
             "action"      => "Not Authorized"
         ];
     }
-}
+}   
 else{
     http_response_code(403);
     exit;
@@ -140,7 +143,8 @@ else{
 // -------------------- ADD Employee --------------------
 if ($action === 'addEmployee') {
     if(!in_array('employee.create', $_SESSION['permissions'], true)){
-        jerror('You do not have permission');
+        http_response_code(403);
+        exit;
     }
     $emp_id = intval($_POST['emp_id'] ?? 0);
     $fname = trim(ucwords(trim($_POST['fname'])) ?? '');

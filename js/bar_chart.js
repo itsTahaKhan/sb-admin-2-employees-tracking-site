@@ -56,7 +56,7 @@ $.ajax({
             else if(label==='Weekly inactive'){
                 window.location.href = 'weeklyinactive.php';
             }
-            else if(label==='Daily active'){
+            else if(label==='Active today'){
                 window.location.href = 'dailyactive.php';
             }
             else{
@@ -127,7 +127,7 @@ $.ajax({
             else if(label==='Monthly inactive'){
                 window.location.href = 'monthlyinactive.php';
             }
-            else if(label==='Daily active'){
+            else if(label==='Active today'){
                 window.location.href = 'dailyactive.php';
             }
             else{

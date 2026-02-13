@@ -54,12 +54,34 @@ include './datahandling/handledesign.php';
 //File for charts handling
 include './datahandling/fetchchartsdata.php';
 
+//fetch logs for logs table
+include './datahandling/fetchlogs.php';
 
 //User's data
 include './datahandling/userdata.php';
 
 //download employees list
 include './datahandling/downloademplist.php';
+
+if ($action === 'fetchSingleLog') {
+
+    $id = (int) $_POST['log_id'];
+
+    $stmt = $conn->prepare("
+        SELECT values_before, values_after
+        FROM logs
+        WHERE id = ?
+    ");
+
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $log = $result->fetch_assoc();
+
+    echo json_encode($log);
+    exit;
+}
+
 
 //Change Password
 include './datahandling/changepass.php';

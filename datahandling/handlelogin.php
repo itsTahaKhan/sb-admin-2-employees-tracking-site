@@ -4,8 +4,9 @@ if($action === 'login'){
     $login_pass = $_POST['login_pass'];
     if($login_email === '' || $login_pass === '') jerror('Enter credentials');
     $stmt = $conn->prepare("
-        SELECT emp_id,fname,email,pass,role 
-        FROM employees 
+        SELECT e.emp_id, e.fname, e.lname, e.email, e.pass, er.role_id AS role
+        FROM employees e
+        JOIN emp_roles er ON e.emp_id = er.emp_id 
         WHERE email = ?
     ");
     $stmt->bind_param('s', $login_email);
@@ -14,17 +15,12 @@ if($action === 'login'){
     if(!$res){
         jerror("Email doesn't exist");
     }
-    $stmt = $conn->prepare("SELECT design_name FROM employeedesignations WHERE emp_id = ?");
-    $stmt->bind_param('i',$res['emp_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $isAdmin = false;
-
     $stored_pass = $res['pass'];
-        
+    
     if(password_verify($login_pass, $stored_pass)){
         $_SESSION['id'] = $res['emp_id'];
         $_SESSION['name'] = $res['fname'];
+        $_SESSION['lname'] = $res['lname'];
         $_SESSION['email'] = $res['email'];
         $_SESSION['role'] = $res['role'];
         $_SESSION['logged_in'] = true;
@@ -38,6 +34,7 @@ if($action === 'login'){
         if(empty($_SESSION['csrf_token'])){
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
+
         $stmt = $conn->prepare("
             SELECT p.perm_name AS permissions
             FROM perms p

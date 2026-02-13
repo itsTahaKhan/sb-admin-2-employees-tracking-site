@@ -15,6 +15,36 @@ jQuery(document).ready(function($){
     }
   });
 
+  var logs = $('#logsTable').DataTable({
+    processing: true,
+    serverSide: true,
+    responsive: true,
+    dom: 'Bfrtip',
+    buttons: [{
+      extend: "excelHtml5",
+      text: "Download Logs",
+      filename: "Logs",
+      titleAttr: "Export to Excel",
+      exportOptions: {
+        columns: [0,1]
+      }
+    }],
+    ajax: {
+      url: "handleform.php",
+      type: "POST",
+      data: {action : "fetchLogs"}
+    },
+    order: [],
+    columns: [
+      {data: "created_at"},
+      {data: "action"},
+      {data: "actor"},
+      {data: "columns_updated"},
+      {data: "values_before"},
+      {data: "values_after"}
+    ]
+  });
+
   var myTable = $('#empTable').DataTable({
     processing: true,
     serverSide: true,
@@ -447,7 +477,7 @@ $('input, select').on('input change', function () {
           loadDesignationOptions();
         }
         else if(resp.status==='error'){
-          window.location.href = 'fixrows.csv';
+          // window.location.href = 'fixrows.csv';
           Swal.fire({
             icon: 'error',
             title: '!Error',
@@ -589,4 +619,4 @@ $(document).on('click', '#markAllRead', function(e){
 });
 
 
-setInterval(loadNotifications,2000);
+// setInterval(loadNotifications,2000);
